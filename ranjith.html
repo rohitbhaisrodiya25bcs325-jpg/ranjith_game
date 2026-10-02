@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>1st Year CSE - Online Quiz</title>
+
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: linear-gradient(135deg, #0a0f3a, #3b0c59);
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        padding: 20px;
+    }
+    .container {
+        width: 100%;
+        max-width: 800px;
+        background: #ffffff22;
+        padding: 25px;
+        border-radius: 15px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        text-align: center;
+    }
+    .subject-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .subject-card {
+        background: #ffffff33;
+        padding: 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .subject-card:hover {
+        background: #ffffff55;
+        transform: translateY(-4px);
+    }
+    .subject-emoji { font-size: 2.2rem; margin-bottom: 8px; }
+    #quizScreen, #resultScreen { display: none; }
+    .option {
+        background: #ffffff33;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: left;
+    }
+    .option:hover { background: #ffffff66; }
+    #timer { margin: 10px 0; color: #ffeb3b; font-weight: bold; }
+    button {
+        padding: 10px 20px;
+        background: #ffca28;
+        color: #3e2723;
+        border: none;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+    button:hover { background: #ffb300; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- SUBJECT SELECT SCREEN -->
+    <div id="subjectScreen">
+        <h1>1st Year CSE - Quiz Portal</h1>
+        <p>Select a subject to start:</p>
+
+        <div class="subject-grid">
+            <div class="subject-card" onclick="selectSubject('cprog')">
+                <div class="subject-emoji">💻</div>
+                <h3>C Programming</h3>
+            </div>
+
+            <div class="subject-card" onclick="selectSubject('maths')">
+                <div class="subject-emoji">➗</div>
+                <h3>Engineering Maths</h3>
+            </div>
+
+            <div class="subject-card" onclick="selectSubject('digitallogic')">
+                <div class="subject-emoji">🔢</div>
+                <h3>Digital Logic</h3>
+            </div>
+
+            <div class="subject-card" onclick="selectSubject('os')">
+                <div class="subject-emoji">🖥</div>
+                <h3>Computer & OS</h3>
+            </div>
+
+            <div class="subject-card" onclick="selectSubject('ds')">
+                <div class="subject-emoji">📂</div>
+                <h3>Data Structures</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quizScreen">
+        <h2 id="subjectTitle"></h2>
+        <div id="timer">Time: 60s</div>
+        <div id="progress"></div>
+        <h3 id="question"></h3>
+        <div id="options"></div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="resultScreen">
+        <h1>Result</h1>
+        <h2 id="scoreText"></h2>
+        <p id="subjectResult"></p>
+        <button onclick="retrySameSubject()">Retry</button>
+        <button onclick="goToSubjects()">Choose Another Subject</button>
+    </div>
+
+</div>
+
+<script>
+    // ---------- QUIZ DATA ----------
+    const quizzes = {
+        cprog: {
+            name: "C Programming",
+            questions: [
+                { q:"Which symbol ends a statement in C?", options:[".", ",", ";", ":"], correct:2 },
+                { q:"Which is correct output function?", options:["printf()", "output()", "print()", "cout<<"], correct:0 },
+                { q:"Which is a valid C data type?", options:["digit","int","num","decimal"], correct:1 },
+                { q:"Single line comment?", options:["#comment", "//comment","/comment/","--comment"], correct:1 }
+            ]
+        },
+
+        maths: {
+            name: "Engineering Maths",
+            questions: [
+                { q:"Derivative of x² is:", options:["2x","x","x²","1"], correct:0 },
+                { q:"sin(90°) =", options:["0","1","1/2","√3/2"], correct:1 },
+                { q:"2×3 matrix elements:", options:["3","4","6","9"], correct:2 },
+                { q:"Integral of 1/x dx =", options:["x","ln|x|","1/x","eˣ"], correct:1 }
+            ]
+        },
+
+        digitallogic: {
+            name: "Digital Logic",
+            questions: [
+                { q:"Binary of 5:", options:["101","110","111","011"], correct:0 },
+                { q:"Universal gate:", options:["AND","OR","NOR","NAND"], correct:3 },
+                { q:"NOT gate has:", options:["1 input","2 inputs","3 inputs","4 inputs"], correct:0 },
+                { q:"AND gate output is 1 when:", options:["Both 0","Both 1","Any 1","Never"], correct:1 }
+            ]
+        },
+
+        os: {
+            name: "Computer & OS",
+            questions: [
+                { q:"Which is input device?", options:["Monitor","Printer","Keyboard","Projector"], correct:2 },
+                { q:"Windows is a:", options:["Driver","Utility","OS","Virus"], correct:2 },
+                { q:"Main memory is:", options:["HDD","SSD","RAM","DVD"], correct:2 },
+                { q:"Linux is:", options:["OS","App","Game","Driver"], correct:0 }
+            ]
+        },
+
+        ds: {
+            name: "Data Structures",
+            questions: [
+                { q:"FIFO structure:", options:["Stack","Queue","Tree","Graph"], correct:1 },
+                { q:"LIFO structure:", options:["Queue","Stack","Array","Graph"], correct:1 },
+                { q:"Remove from stack:", options:["push","pop","delete","pull"], correct:1 },
+                { q:"Linear structure:", options:["Tree","Graph","Array","Heap"], correct:2 }
+            ]
+        }
+    };
+
+    // ---------- STATE ----------
+    let currentSubject = null;
+    let index = 0;
+    let score = 0;
+    let timer = null;
+    let timeLeft = 60;
+
+    const subjectScreen = document.getElementById("subjectScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    function selectSubject(key){
+        currentSubject = quizzes[key];
+        index = 0;
+        score = 0;
+        timeLeft = 60;
+
+        subjectScreen.style.display = "none";
+        quizScreen.style.display = "block";
+
+        document.getElementById("subjectTitle").innerText =
+            "Subject: " + currentSubject.name;
+
+        startTimer();
+        loadQuestion();
+    }
+
+    function startTimer(){
+        timer = setInterval(()=>{
+            timeLeft--;
+            document.getElementById("timer").innerText = "Time: " + timeLeft + "s";
+            if(timeLeft<=0){ endQuiz(); }
+        },1000);
+    }
+
+    function loadQuestion(){
+        let q = currentSubject.questions[index];
+        document.getElementById("question").innerText = q.q;
+        document.getElementById("progress").innerText =
+            "Question " + (index+1) + " of " + currentSubject.questions.length;
+
+        let optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+        q.options.forEach((opt,i)=>{
+            let div = document.createElement("div");
+            div.className = "option";
+            div.innerText = opt;
+            div.onclick = ()=>selectOption(i);
+            optionsDiv.appendChild(div);
+        });
+    }
+
+    function selectOption(i){
+        if(i === currentSubject.questions[index].correct){
+            score++;
+        }
+        index++;
+        if(index < currentSubject.questions.length){
+            loadQuestion();
+        } else {
+            endQuiz();
+        }
+    }
+
+    function endQuiz(){
+        clearInterval(timer);
+        quizScreen.style.display = "none";
+        resultScreen.style.display = "block";
+
+        document.getElementById("scoreText").innerText =
+            "Your Score: " + score + " / " + currentSubject.questions.length;
+
+        document.getElementById("subjectResult").innerText =
+            "Subject attempted: " + currentSubject.name;
+    }
+
+    function retrySameSubject(){ selectSubject(currentSubject.name.toLowerCase()); }
+    function goToSubjects(){
+        quizScreen.style.display="none";
+        resultScreen.style.display="none";
+        subjectScreen.style.display="block";
+    }
+</script>
+
+</body>
+</html>
